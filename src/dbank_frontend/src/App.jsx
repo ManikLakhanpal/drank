@@ -1,30 +1,67 @@
-import { useState } from 'react';
-import { dbank_backend } from 'declarations/dbank_backend';
+import { useState, useEffect } from "react";
+import { dbank_backend } from "../../declarations/dbank_backend";
 
 function App() {
-  const [greeting, setGreeting] = useState('');
+  const [balance, setBalance] = useState(0);
+  const [topUpAmount, setTopUpAmount] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
 
-  function handleSubmit(event) {
-    event.preventDefault();
-    const name = event.target.elements.name.value;
-    dbank_backend.greet(name).then((greeting) => {
-      setGreeting(greeting);
-    });
-    return false;
+  useEffect(() => {
+    async function fetchBalance() {
+      setBalance(await dbank_backend.checkBalance());
+    }
+    fetchBalance();
+  }, []);
+
+  const handleTopUpChange = (e) => setTopUpAmount(e.target.value);
+  const handleWithdrawChange = (e) => setWithdrawAmount(e.target.value);
+
+  const handelSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (topUpAmount) {
+        await dbank_backend.topUp(parseFloat(topUpAmount));
+    }
+
+    if (withdrawAmount) {
+        await dbank_backend.withdrawlAmount(parseFloat(withdrawAmount));
+    }
+
+    setBalance(await dbank_backend.checkBalance());
+    setTopUpAmount("");
+    setWithdrawAmount("");
+
   }
 
   return (
-    <main>
-      <img src="/logo2.svg" alt="DFINITY logo" />
-      <br />
-      <br />
-      <form action="#" onSubmit={handleSubmit}>
-        <label htmlFor="name">Enter your name: &nbsp;</label>
-        <input id="name" alt="Name" type="text" />
-        <button type="submit">Click Me!</button>
+    <div className="container">
+      <img src="dbank_logo.png" alt="DBank logo" width="100" />
+      <h1>
+        Current Balance: $<span id="value">{balance}</span>
+      </h1>
+      <div className="divider"></div>
+      <form onSubmit={handelSubmit}>
+        <h2>Amount to Top Up</h2>
+        <input
+          id="input-amount"
+          type="number"
+          step="0.01"
+          name="topUp"
+          value={topUpAmount}
+          onChange={handleTopUpChange}
+        />
+        <h2>Amount to Withdraw</h2>
+        <input
+          id="withdrawal-amount"
+          type="number"
+          name="withdraw"
+          step="0.01"
+          value={withdrawAmount}
+          onChange={handleWithdrawChange}
+        />
+        <input id="submit-btn" type="submit" value="Finalise Transaction"/>
       </form>
-      <section id="greeting">{greeting}</section>
-    </main>
+    </div>
   );
 }
 
